@@ -1,0 +1,26 @@
+-- Physical and Social --
+
+Location Information: 
+- Satellite images
+- Drone recon
+- Building Layout (badge readers, break areas, security, fencing)
+
+Job Information:
+- Employees (name, job title, phone number, manager, etc.)
+- Pictures (badge photos, desk photos, computer photos, etc.)
+
+-- Web and Host --
+
+Target Validation:
+- WHOIS, nslookup, dnsrecon, TheHaverster
+
+Finding Subdomains:
+- Google Fu, dig, Nmap, Sublist3r, Bluto, crt.sh, etc.
+
+Fingerprinting:
+- Nmap, Wappalyzer, WhatWeb, BuiltWith, Netcat
+
+Data Breaches:
+- HaveIBeenPwned and similar lists
+
+

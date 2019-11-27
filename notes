@@ -1,0 +1,2 @@
+$ python -m pyftpdlib -p 21 -w
+$ python3.7 -m http.server 80

@@ -1,0 +1,15 @@
+- BugCrowd.com
+- hunter.io -> find corporate email addresses
+- https://github.com/philipperemy/tensorflow-1.4-billion-password-analysis -> 1.4 Billion Clear Text Passwords
+- https://github.com/hmaverickadams/breach-parse -> Script to parse through the already downloaded clear-text passwords (I already wrote it ./breach-parse.sh)
+- Google Maps
+- Various Satellite Maps Websites, to have a more up to date view
+- Google Dorks (Google Hacking) - Example: site:tesla.com -www -forms -> To filter by tesla.com site, but excluding domains starting with "www" and "forms".
+- TheHaverster - Example: theHarvester -d tesla.com -l 500 -e 8.8.8.8 -b google,crtsh,hunter
+- HaveIBeenPwned
+- Bluto ($ pip install bluto)
+- crt.sh
+- Wappalyzer Mozilla Add-on extension
+- whatweb (installed as binary on Kali) - Example: whatweb -v tesla.com
+- buildWith (Web site: https://builtwith.com/)
+
