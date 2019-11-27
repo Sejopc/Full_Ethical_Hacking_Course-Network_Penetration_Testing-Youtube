@@ -1,4 +1,5 @@
 - Nmap (scanning TCP, UDP, as well as using Scripts - Scripts are stored in: /usr/share/nmap/scripts/- Scripts are super useful for scanning against a vulnerability, bruteforcing, etc)
 - Nessus (Download it, install it, start service and put the product key)
 - Metasploit (Port scanning using metasploit: auxiliary/scanner/portscan/syn - We looked for up using # search portscan)
-- Nikto 
+- Nikto  
+- BurpSuite
