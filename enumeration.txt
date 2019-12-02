@@ -1,0 +1,11 @@
+We used Kioptrix Vulnerable Machine to practice enumeration. We used:
+- Nessus
+- nikto
+- Nmap
+- searchsploit
+- online exploit DBs
+- smbclient
+- OWASP DirBuster 
+- netcat (nc)
+
+We used one of the HackTheBox Machines and Ennumerate it.
