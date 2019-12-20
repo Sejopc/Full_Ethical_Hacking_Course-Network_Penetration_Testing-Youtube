@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $# != 2 ]; 
+if [ $# -lt 2 ]; 
 then
 	echo "Breach Parse v2: A Breached Domain Parsing Tool by Heath Adams"
 	echo " "
@@ -54,7 +54,8 @@ else
 	file_Count=0
 
 	function progressBar() {
-		let _progress=$((($file_Count * 100 / $total_FIles * 100) / 100))
+		
+		let _progress=$((($file_Count * 100 / $total_Files * 100) / 100))
 		let _done=$((($_progress * 4) / 10))
 		let _left=$((40 - $_done))
 

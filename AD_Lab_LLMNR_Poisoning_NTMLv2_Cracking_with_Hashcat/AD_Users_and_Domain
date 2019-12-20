@@ -1,0 +1,21 @@
+The current structure is the following:
+
+Windows 10:
+Purpose: Simulate a normal user on the network being connected to Active Directory Domain Controller.
+COMPUTER NAME: THE-PUNISHER
+DOMAIN: marvel.local
+Username assigned on Active Directory (under domain marvel.local): fcastle (Frank Castle)
+So, when the user logs in, he will use AD user (fcastle) instead of the local computer user created when Windows was set up.
+
+
+
+Windows 16:
+Purpose: Domain Controller for the Network (where Active Directory is installed). Also used for DNS resolution for the others computers connected to this domain (marvel.local)
+COMPUTER NAME: HYDRA
+DOMAIN: marvel.local (Forest created on Active Directory on this machine)
+Username assigned on Active Directory (under domain marvel.local): Administrator (by default is assigned on the Domain Controller computer)
+So, when the user logs in, he will use AD user (Administrator) instead of the local computer user created when Windows was set up.
+
+
+Kali Linux:
+Attacker machine were we will be capturing and poisoning (in order to steal credentials NTLM hashes) LLMNR and NBT-NS requests.

