@@ -2,7 +2,7 @@ LLMNR = Link Local Multicast Name Resolution
 
 NBTNS = NetBIOS Name Service (Older than LLMNR)
 
-They are used to identify a host when a DNS Resolution fails. LLMNR and NTBNS both send the Windows Username and Hashed Password (as NTLMv1 or NTLMv2 format).
+They are used to identify a host when a DNS Resolution fails. LLMNR and NBTNS both send the Windows Username and Hashed Password (as NTLMv1 or NTLMv2 format).
 We also use them when connecting to a Shared drive/folder, by using Name Resolution. 
 
 See image on this folder "llmnr_nbtns_working" to see how it works, and how we as an attacker can become a MiTM in order to receive the hash. Pretty much when the victim tries to look for a network shared that is not known (such as he/she mispelled the network share name by accident), the AD or the server will not know what share the victim is looking for and will reply with "I have no idea", and so the victim will Broadcast by using LLMNR or NBTNS if anyone knows the mispelled network share is, and the hacker will falsely claim to know where it is and reply back saying "I do, send me your hash and I'll connect you", so the victim sends us the hash, and then we might be able to crack it using other tools such as Hashcat. We also use NTLM Relay or Pass the Hash attack, which is pretty much sending the hash itself to authentiate, without ever knowing that the password is.

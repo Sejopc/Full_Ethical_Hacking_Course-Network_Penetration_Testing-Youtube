@@ -3,16 +3,31 @@ The current structure is the following:
 Windows 10:
 Purpose: Simulate a normal user on the network being connected to Active Directory Domain Controller.
 COMPUTER NAME: THE-PUNISHER
+LOCAL USER ACCOUNT: Jose Peralta
+LOCAL USER PASSWORD: qwaszx12
 DOMAIN: marvel.local
 Username assigned on Active Directory (under domain marvel.local): fcastle (Frank Castle)
+Password assigned to fcastle on AD: Kawaninjazx6r
 So, when the user logs in, he will use AD user (fcastle) instead of the local computer user created when Windows was set up.
+NOTE: Make sure the DNS Server for this machine is the IP address of AD Machine (Windows 2016), otherwise, it won't be able to authenticate against AD.
 
+
+Windows 10:
+This is the other Win 10 VM Machine, to simulat another AD Users on the network:
+COMPUTER NAME: SPIDERMAN
+LOCAL USER ACCOUNT: Jose
+LOCAL USER PASSWORD: qwaszx12
+DOMAIN: marvel.local
+AD USER: pparker (Peter Parker)
+AD PASSWORD: Kawaninjazx6r
 
 
 Windows 16:
 Purpose: Domain Controller for the Network (where Active Directory is installed). Also used for DNS resolution for the others computers connected to this domain (marvel.local)
 COMPUTER NAME: HYDRA
 DOMAIN: marvel.local (Forest created on Active Directory on this machine)
+DOMAIN ADMIN USER: Administrator (en espanol)
+DOMAIN ADMIN PASSWORD: Kawaninjazx6r
 Username assigned on Active Directory (under domain marvel.local): Administrator (by default is assigned on the Domain Controller computer)
 So, when the user logs in, he will use AD user (Administrator) instead of the local computer user created when Windows was set up.
 

