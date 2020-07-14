@@ -30,7 +30,8 @@ DOMAIN ADMIN USER: Administrator (en espanol)
 DOMAIN ADMIN PASSWORD: Kawaninjazx6r
 Username assigned on Active Directory (under domain marvel.local): Administrator (by default is assigned on the Domain Controller computer)
 So, when the user logs in, he will use AD user (Administrator) instead of the local computer user created when Windows was set up.
-
+LOCAL USER ACCOUNT: Jose
+LOCAL USER PASSWORD: qwaszx12
 
 Kali Linux:
 Attacker machine were we will be capturing and poisoning (in order to steal credentials NTLM hashes) LLMNR and NBT-NS requests.
